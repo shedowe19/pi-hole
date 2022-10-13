@@ -9,7 +9,7 @@
 # Please see LICENSE file for your rights under this license.
 
 readonly PI_HOLE_FILES_DIR="/etc/.pihole"
-PH_TEST="true"
+SKIP_INSTALL="true"
 source "${PI_HOLE_FILES_DIR}/automated install/basic-install.sh"
 
 # webInterfaceGitUrl set in basic-install.sh
@@ -40,6 +40,11 @@ warning1() {
             return 1
             ;;
     esac
+}
+
+updateCheckFunc() {
+    /opt/pihole/updatecheck.sh
+    /opt/pihole/updatecheck.sh x remote
 }
 
 checkout() {
@@ -164,6 +169,8 @@ checkout() {
             exit 1
         fi
         checkout_pull_branch "${webInterfaceDir}" "${2}"
+        # Force an update of the updatechecker
+        updateCheckFunc
     elif [[ "${1}" == "ftl" ]] ; then
         local path
         local oldbranch
@@ -178,6 +185,8 @@ checkout() {
             FTLinstall "${binary}"
             restart_service pihole-FTL
             enable_service pihole-FTL
+            # Force an update of the updatechecker
+            updateCheckFunc
         else
             echo "  ${CROSS} Requested branch \"${2}\" is not available"
             ftlbranches=( $(git ls-remote https://github.com/pi-hole/ftl | grep 'heads' | sed 's/refs\/heads\///;s/ //g' | awk '{print $2}') )
